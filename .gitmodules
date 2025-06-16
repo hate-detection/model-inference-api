@@ -1,0 +1,6 @@
+[submodule "app/LID_tool"]
+	path = app/LID_tool
+	url = https://github.com/sapphicart/LID_tool.git
+[submodule "app/indic-trans"]
+	path = app/indic-trans
+	url = https://github.com/libindic/indic-trans.git
