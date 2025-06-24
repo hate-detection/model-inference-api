@@ -24,3 +24,18 @@ def test_hate_predict():
     result = response.json()
     assert response.status_code == 200
     assert result == {'label': [0]}
+
+
+
+def test_feedback():
+    data = {'text': 'Muslims have good Jawline, kyunki unka muslim hota hai.', 
+            'predicted': 1,
+            'feedback': 1,
+            }
+    response = client.post("/feedback",
+                            json=data,
+                            headers={'Content-Type': 'application/json'}
+                            )
+    result = response.json()
+    assert response.status_code == 200
+    assert result == {'received': 'ok'}

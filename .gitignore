@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*.rdb
+*.db
+lame.py
+
 # C extensions
 *.so
 
