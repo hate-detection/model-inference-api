@@ -4,7 +4,7 @@ FROM continuumio/anaconda3:latest
 COPY . .
 
 # give executable permissions
-RUN chmod +x ./app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # create and activate conda environment
 RUN conda env create -f environment.yml
