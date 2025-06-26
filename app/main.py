@@ -4,8 +4,9 @@ import torch
 import redis
 import sqlalchemy
 from typing import Annotated, Union
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, Security, status, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader, APIKeyQuery
 from slowapi import _rate_limit_exceeded_handler, Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -28,7 +29,9 @@ load_dotenv()
 os.environ['TOKENIZERS_PARALLELISM'] = "false"
 REDIS_CLIENT = os.getenv('REDIS_CLIENT')
 POSTGRES_URL = os.getenv('POSTGRES_URL')
+API_KEY = os.getenv('API_KEY')
 
+header_scheme = APIKeyHeader(name="x-api-key", auto_error=True)
 
 class Text(BaseModel):
     text: str
@@ -134,7 +137,7 @@ async def index(request: Request):
 
 @app.post('/predict')
 @limiter.limit("50/minute")
-async def predict(text: Text, request: Request):
+async def predict(text: Text, request: Request, key: str = Depends(header_scheme)):
     print(f"Received input: {text.text}")
     label = make_prediction(str(text))
     
@@ -143,7 +146,7 @@ async def predict(text: Text, request: Request):
 
 @app.post('/feedback')
 @limiter.limit("50/minute")
-async def create_feedback(feedback: Feedback, request: Request, session: SessionDep) -> Feedback:
+async def create_feedback(feedback: Feedback, request: Request, session: SessionDep, key: str = Depends(header_scheme)) -> Feedback:
     try:
         cleaned_text = prelim_process.prelim_process(feedback.text)
         transformed_text = trans_process.trans_2h(cleaned_text)
