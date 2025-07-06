@@ -6,6 +6,7 @@ __pycache__/
 *.rdb
 *.db
 lame.py
+*.zip
 
 # C extensions
 *.so
