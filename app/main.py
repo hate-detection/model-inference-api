@@ -3,6 +3,9 @@ import os
 import torch
 import redis
 import sqlalchemy
+import sys
+import logging
+from loguru import logger
 from typing import Annotated, Union
 from fastapi import FastAPI, Request, Depends, Security, status, HTTPException
 from fastapi.responses import JSONResponse
@@ -32,6 +35,44 @@ POSTGRES_URL = os.getenv('POSTGRES_URL')
 API_KEY = os.getenv('API_KEY')
 
 header_scheme = APIKeyHeader(name="x-api-key", auto_error=True)
+
+
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+
+class InterceptHandler(logging.Handler):
+    def emit(self, record):
+        # Get corresponding Loguru level
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        # Find caller to get correct stack depth
+        frame, depth = logging.currentframe(), 2
+        while frame.f_back and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+# Intercept standard logging
+logging.basicConfig(handlers=[InterceptHandler()], level=logging.DEBUG)
+
+
+logger.add(
+    "/logs/uvicorn.log",
+    rotation="30 MB",
+    retention=3,
+    compression="zip",
+    level="DEBUG",
+    backtrace=True,
+    diagnose=True,
+)
+
 
 class Text(BaseModel):
     text: str
@@ -124,6 +165,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
 limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_CLIENT)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -164,4 +206,18 @@ async def create_feedback(feedback: Feedback, request: Request, session: Session
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="127.0.0.1", port=9696)
+    uvicorn.run(app, host="127.0.0.1", port=9696, log_level=None, log_config=None)
+
+    loggers = (
+    "uvicorn",
+    "uvicorn.access",
+    "uvicorn.error",
+    "fastapi",
+    "asyncio",
+    "starlette",
+    )
+
+    for logger_name in loggers:
+        logging_logger = logging.getLogger(logger_name)
+        logging_logger.handlers = []
+        logging_logger.propagate = True
