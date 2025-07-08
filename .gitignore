@@ -7,6 +7,7 @@ __pycache__/
 *.db
 lame.py
 condaenv.*
+*.zip
 
 # C extensions
 *.so
