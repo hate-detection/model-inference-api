@@ -10,6 +10,7 @@ from typing import Annotated, Union
 from fastapi import FastAPI, Request, Depends, Security, status, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader, APIKeyQuery
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler, Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -60,18 +61,25 @@ class InterceptHandler(logging.Handler):
         )
 
 # Intercept standard logging
-logging.basicConfig(handlers=[InterceptHandler()], level=logging.DEBUG)
+logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 
 
 logger.add(
-    "/logs/uvicorn.log",
-    rotation="30 MB",
+    "logs/model-api.log",
+    rotation="50 MB",
     retention=3,
     compression="zip",
-    level="DEBUG",
+    level="INFO",
     backtrace=True,
     diagnose=True,
 )
+
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://localhost:8080",
+]
 
 
 class Text(BaseModel):
@@ -165,6 +173,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["X-API-Key", "Content-Type", "cf-access-client-id", "cf-access-client-secret"],
+)
 
 limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_CLIENT)
 app.state.limiter = limiter
@@ -194,6 +209,7 @@ async def create_feedback(feedback: Feedback, request: Request, session: Session
         transformed_text = trans_process.trans_2h(cleaned_text)
         feedback.text = transformed_text
 
+
         session.add(feedback)
         session.commit()
         session.refresh(feedback)
@@ -212,6 +228,8 @@ if __name__ == '__main__':
     "uvicorn",
     "uvicorn.access",
     "uvicorn.error",
+    "gunicorn",
+    "gunicorn.error"
     "fastapi",
     "asyncio",
     "starlette",
