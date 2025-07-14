@@ -173,12 +173,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# allowing everything in here
+# the actual CORS headers will
+# be set by Cloudflare tunnel
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False,
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["X-API-Key", "Content-Type", "cf-access-client-id", "cf-access-client-secret"],
+    allow_headers=["*"],
 )
 
 limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_CLIENT)
