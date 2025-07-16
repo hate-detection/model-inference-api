@@ -234,6 +234,7 @@ if __name__ == '__main__':
     "uvicorn.access",
     "uvicorn.error",
     "gunicorn",
+    "gunicorn.access",
     "gunicorn.error"
     "fastapi",
     "asyncio",
