@@ -79,7 +79,13 @@ The API server should now be running at port `9696`. To change the port or to us
 >
 >This method requires you to have `conda` installed on your system.
 
-This is my preferred way of running the server. I feel it gives me more control while self-hosting. 
+Apart from FastAPI specific dependencies, this project also has submodule specific dependencies. If you opt for manual installation, make sure to install these first as further steps might throw errors.
+
+- [ ] **Java SDK (LID_tool dependency):** `sudo apt -y install default-jre`
+- [ ] **Enchant library (preprocessing.py dependency):** `sudo apt-get -y install python3-enchant`
+- [ ] **aspell hindi dictionary (preprocessing.py dependency):** `sudo apt-get -y install aspell-hi`
+- [ ] **gcc (indic-trans dependency):**: `sudo apt-get update && apt-get -y install build-essential`
+
 
 **Steps:**
 
@@ -94,13 +100,28 @@ cd model-inference-api
 conda env create -f environment.yml
 conda activate myenv
 ```
-3. Create an `.env` file with the following contents
+3. Install `indic-trans`
+```bash
+cd app/indic-trans
+pip install -r requirements.txt
+pip install .
+```
+4. Get `mallet` for `LID_tool`
+```bash
+cd app
+wget https://mallet.cs.umass.edu/dist/mallet-2.0.8.tar.gz
+tar -xvzf mallet-2.0.8.tar.gz
+mv mallet-2.0.8 LID_tool/
+rm -rf mallet-2.0.8.tar.gz
+rm ._mallet-2.0.8
+```
+5. Create an `.env` file with the following contents
 ```
 REDIS_CLIENT=<redis_server_url>
 POSTGRES_URL=<postgres_server_url>
 API_KEY=<your_api_key>
 ```
-4. Run with `uvicorn` (for development) or `gunicorn` (for production)
+6. Run with `uvicorn` (for development) or `gunicorn` (for production)
 ```bash
 cd app
 uvicorn --host 0.0.0.0 --port 8000 main:app
