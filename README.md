@@ -7,7 +7,8 @@
     <a href="usage">Usage</a> •
     <a href="self-hosting">Self Hosting</a> •
     <a href="security">Security</a> •
-    <a href="cors-config">CORS Config</a>
+    <a href="cors-config">CORS Config</a> •
+    <a href="contributions">Contributions</a>
 </div>
 
 ## Overview
@@ -132,7 +133,63 @@ curl http://localhost:8000/feedback -XPOST \
 
 ## Self Hosting
 
+Lucky for us, there are many ways to self-host a service today. I use Cloudflare tunnels which is the simplest and also the most efficient for my use case.
+
+### Cloudflare Tunnel Pros:
+
+- Super easy to set up, literally a one-line command to fire up the cloudflare tunnel as soon as your machine starts.
+- Can map any internal port and service to make it publicly routable.
+- Fine-grained deny-by-default security control. Lets you choose your own security mechanism.
+
+### Cloudflare Tunnel Cons:
+
+- The documentation does not seem too in-depth for me and there are some minor issues that wouldn't have cost me days while setting up if Cloudflare just added a little footnote in the docs.
+
+### My Setup:
+Anyways, with that out of the way, let's look into how I set up my self-host API.
+
+- [ ] Create a free tier Cloudflare account.
+- [ ] Follow the [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) guide for initial setup.
+- [ ] After setup, check if your server is accessible via the configured domain.
+- [ ] If you have a frontend application like me and you want to access the backend through the frontend, it will be best to setup single header authentication. Follow the [Cloudflare guide](https://developers.cloudflare.com/cloudflare-one/identity/service-tokens/) to set it up.
+
+**Issues I faced:**
+- [ ] If you get a `This page is not redirecting properly` error, you might have to change the SSL/TLS Encryption mode to `Full (Strict)`, more in [this guide](https://developers.cloudflare.com/ssl/troubleshooting/too-many-redirects/).
+- [ ] While setting up single-header authentication, I lost days wondering why is my application just ignoring the token. To fix this, go to **Zero Trust** => **Access** => **Policies**. Now add a new policy and in the **Action** dropdown, choose **Service Auth** instead of **Allow**.
+
+
 ## Security
-- Rate Limits implemented for every endpoint.
+
+Security configurations are implemented in both the FastAPI app and in the Cloudflare Tunnel policies.
+
+### FastAPI:
+- **Rate limiting via Redis:** Modify the rate-limits in `app/main.py`. Current limits are 5 requests per minute for `/` and 50 requests per minute for both `/predict` and `/feedback`.
+>[!CAUTION]
+>
+> If you plan to use a frontend app to talk to the API Server, the rate limits should be configured in the frontend instead of the backend. Due to CORS configuration, only one origin IP will be talking to the backend, this can lead to rate limit issues on valid requests.
+
+- **API Key authentication:** All `POST` requests to `/predict` and `/feedback` must contain a valid API Key. Set up your API Key by modifying the environment variable `API_KEY`.
+
+### Cloudflare Tunnel
+
+- **Service auth headers:** All requests to the tunnel should contain valid **Service auth** headers. As Cloudflare follows a deny-by-default policy, all requests without a valid header are denied access. You can set up other authentication policies via **Zero Trust** => **Access** => **Policies** in the Cloudflare dashboard.
 
 ## CORS Config
+
+This is an optional configuration and highly dependant on the particular use case. For my setup, I only want my frontend application to communicate with my backend. My set up follows the following configuration:
+
+### FastAPI:
+
+- **Origins:** all
+- **Headers:** all
+- **Methods:** all
+
+### Cloudflare tunnel:
+
+- **Origins:** frontend app domain
+- **Headers:** content-type, x-api-key, service auth headers
+- **Methods:** POST, HEAD
+
+## Contributions
+
+This app is currently **not** accepting contributions. However, you are free to [fork](https://github.com/hate-detection/model-inference-api/fork) and modify the app according to your use cases. If you find a problem or have a feature recommendation, [create an issue](https://github.com/hate-detection/model-inference-api/issues).
