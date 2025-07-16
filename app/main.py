@@ -196,7 +196,8 @@ async def index(request: Request):
 
 
 @app.post('/predict')
-@limiter.limit("50/minute")
+# uncomment the line below to implement rate limits
+#@limiter.limit("50/minute")
 async def predict(text: Text, request: Request, key: str = Depends(header_scheme)):
     print(f"Received input: {text.text}")
     label = make_prediction(str(text))
@@ -205,7 +206,8 @@ async def predict(text: Text, request: Request, key: str = Depends(header_scheme
 
 
 @app.post('/feedback')
-@limiter.limit("50/minute")
+# uncomment the line below to implement rate limits
+#@limiter.limit("50/minute")
 async def create_feedback(feedback: Feedback, request: Request, session: SessionDep, key: str = Depends(header_scheme)) -> Feedback:
     try:
         cleaned_text = prelim_process.prelim_process(feedback.text)
