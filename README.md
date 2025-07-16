@@ -1,14 +1,14 @@
 # model-inference-api
 
 <div align="center">
-    <a href="overview">Overview</a> •
-    <a href="necessary-logic">Necessary Logic</a> •
-    <a href="installation">Installation</a> •
-    <a href="usage">Usage</a> •
-    <a href="self-hosting">Self Hosting</a> •
-    <a href="security">Security</a> •
-    <a href="cors-config">CORS Config</a> •
-    <a href="contributions">Contributions</a>
+    <a href="#overview">Overview</a> •
+    <a href="#necessary-logic">Necessary Logic</a> •
+    <a href="#installation">Installation</a> •
+    <a href="#usage">Usage</a> •
+    <a href="#self-hosting">Self Hosting</a> •
+    <a href="#security">Security</a> •
+    <a href="#cors-config">CORS Config</a> •
+    <a href="#contributions">Contributions</a>
 </div>
 
 ## Overview
